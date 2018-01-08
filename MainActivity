@@ -1,0 +1,106 @@
+
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+public class MainActivity extends AppCompatActivity {
+
+    @BindView(R.id.txt_texto)
+    TextView txt_texto;
+    @BindView(R.id.btn_previsao)
+    Button btn_previsao;
+
+    SptransApi service;
+    private String cookie = "";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+
+        //inteceptar o body do http
+        HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        //client
+        OkHttpClient client = new OkHttpClient
+                .Builder()
+                .addInterceptor(interceptor)
+                .build();
+
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("http://api.olhovivo.sptrans.com.br/v2.1/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .client(client)
+                .build();
+
+
+        service = retrofit.create(SptransApi.class);
+
+        String token = 'yourToken';
+        Call<String> login = service.getLogin(token);
+
+        login.enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+
+                Toast.makeText(getBaseContext(), String.valueOf(response.body()), Toast.LENGTH_SHORT).show();
+                cookie = String.valueOf(response.headers().get("Set-Cookie"));
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+
+            }
+        });
+
+    }
+
+    
+    @OnClick(R.id.btn_previsao)
+    public void getPrevisao(){
+
+        int codigoParada = 'yourStopCode'
+
+        Call<PrevisaoPorParada> previsao = service.getPrevisao(codigoParada, cookie);
+
+        previsao.enqueue(new Callback<PrevisaoPorParada>() {
+            @Override
+            public void onResponse(Call<PrevisaoPorParada> call, Response<PrevisaoPorParada> response) {
+
+                try {
+
+                    String onibus = String.valueOf(response.body().getP().getL().get(0).getVs().get(0).getP());
+                    String horario = String.valueOf(response.body().getP().getL().get(0).getVs().get(0).getT());
+
+                    txt_texto.setText("Ônibus:     " + onibus + "\n\nHorário:     " + horario);
+
+                } catch (Exception e){
+                    System.out.println("Error " + e.getMessage());
+                }
+
+            }
+
+            @Override
+            public void onFailure(Call<PrevisaoPorParada> call, Throwable t) {
+
+            }
+        });
+
+    }
+
+}
