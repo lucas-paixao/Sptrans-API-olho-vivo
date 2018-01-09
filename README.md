@@ -16,4 +16,4 @@ Simple usage of the Sptrans API - Android
     
 //AndroidManifest:
 
-<uses-permission android:name="android.permission.INTERNET"/>
+uses-permission android:name="android.permission.INTERNET"
