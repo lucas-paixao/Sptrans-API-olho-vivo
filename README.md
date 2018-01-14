@@ -1,6 +1,7 @@
 # Sptrans-API-olho-vivo
 Simple usage of the Sptrans API - Android
 
+Retrofit, butterknife, okhttp
 //build.gradle:
 
     compile 'com.jakewharton:butterknife:8.8.1'
